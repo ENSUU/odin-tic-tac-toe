@@ -106,13 +106,15 @@ const gameBoard = (function() {
 
 const game = (function() {
 
-    const start = function() {
+    const start = function(p1, p2) {
         gameStatus = true; 
         gameTie = false; 
+        let playerOneName = p1; 
+        let playerTwoName = p2; 
 
         // Creating the players. 
-        let playerOne = createUser('David', 'O'); 
-        let playerTwo = createUser('Day', 'X');
+        let playerOne = createUser(playerOneName, 'O'); 
+        let playerTwo = createUser(playerTwoName, 'X');
 
         // Setting the initial current player. 
         let curPlayer = playerOne; 
@@ -134,4 +136,13 @@ function createUser(name, symbol) {
     return {name, symbol, moves}; 
 }
 
-game.start();
+const playButton = document.querySelector('.playButton'); 
+
+playButton.addEventListener('click', (e) => {
+    e.preventDefault();
+    playerOneName = document.querySelector('#player1Name').value; 
+    playerTwoName = document.querySelector('#player2Name').value;
+    document.querySelector('.gameBoard').classList.toggle('hidden'); 
+    document.querySelector('form').classList.add('hidden');
+    game.start(playerOneName, playerTwoName);
+})

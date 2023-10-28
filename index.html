@@ -10,7 +10,15 @@
 <body>
     <header>Tic Tac Toe</header>
     <main>
-        <div class="gameBoard">
+        <form action="" method="">
+            <h2>Who's Playing?</h2>
+            <label for="player1Name">Player 1:</label>
+            <input type="text" name="player1Name" id="player1Name">
+            <label for="player2Name">Player 2:</label>
+            <input type="text" name="player2Name" id="player2Name">
+            <button class="playButton" type="submit">Play</button>
+        </form>
+        <div class="gameBoard hidden">
             <div class="cell one"></div>
             <div class="cell two"></div>
             <div class="cell three"></div>

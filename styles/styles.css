@@ -14,10 +14,40 @@ body {
 
 header {
     font-size: 3rem;
+    font-weight: bold;
 }
 
 main {
     text-align: center;
+}
+
+form {
+    border: 3px solid black;
+    width: 600px;
+    border-radius: 12px;
+    padding: 2rem 4rem;
+    font-size: 1.4rem;
+    display: grid;
+}
+
+form input {
+    height: 2rem;
+    font-size: 1.4rem;
+    text-align: center;
+}
+
+form button {
+    background: transparent;
+    font-weight: bold;
+    font-size: 1.4rem;
+    margin: 2rem 0;
+    padding: 1rem 2rem;
+    border-radius: 12px;
+}
+
+form button:hover {
+    background-color: black; 
+    color: white;
 }
 
 .gameBoard {
@@ -44,4 +74,8 @@ main {
     display: flex;
     justify-content: center;
     align-items: center;
+}
+
+.hidden {
+    display: none;
 }
