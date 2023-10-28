@@ -1,70 +1,111 @@
 const gameBoard = (function() {
     let board = ["", "", "", "", "", "", "", "", ""];
-    let boardIndex = {
-        "one": 0, 
-        "two": 1, 
-        "three": 2, 
-        "four": 3, 
-        "five": 4, 
-        "six": 5, 
-        "seven": 6, 
-        "eight": 7, 
-        "nine": 8
-    }; 
 
-    const renderBoard = function (curPlayer, playerOne, playerTwo) {
-        // For each cell in board array, populate DOM game board accordingly.
-        for (let c = 0; c < 10; c++) {
-            if (board[c] == "X"){
-                cells[c].innerText = "X"; 
-            }
-            else if (board[c] == "O"){
-                cells[c].innerText = "O"; 
-            }
-            else {
-                continue;
-            }
+    const resetBoard = () => {
+        for (let i = 0; i < board.length; i++) {
+            board[i] = "";
+            console.log(board);
         }
-
-        // Selecting all the board cells in the DOM.
-        const cells = document.querySelectorAll('.cell'); 
-
-        // Changing cell's value to current player's symbol. 
-        cells.forEach(cell => {
-            cell.addEventListener('click', () => {
-                let isValidMove = gameBoard.addPlayerMark(cell, curPlayer); 
-                if (isValidMove) {
-                    let playerWins = gameBoard.playerWon(curPlayer); 
-                    let gameResult = document.querySelector('.gameResult'); 
-                    if (playerWins) {
-                        gameResult.innerText = `${curPlayer.name} has won the game!`; 
-                        return; 
-                    }
-                    let isTie = gameBoard.isFilled(); 
-                    if (isTie) {
-                        gameResult.innerText = `It's a Tie! Nobody wins.`; 
-                        return; 
-                    }
-                    curPlayer = changePlayer(curPlayer, playerOne, playerTwo); 
-                }
-            })
-        })
-        return curPlayer; 
     }
 
-    const addPlayerMark = function(cell, player) {
-        if (cell.innerText === "") {
-            cell.innerText = `${player.symbol}`; 
-            const cellIndex = boardIndex[cell.className.split(' ')[1]];
-            player.moves.add(cellIndex);
-            board[cellIndex] =  `${player.symbol}`; 
-            return true; 
+    const addMark = function(index, sign) {
+        if (index > board.length) return; 
+        board[index] = sign; 
+        console.log(board);
+    }
+
+    const getMark = function(index) {
+        if (index > board.length) return; 
+        return board[index]; 
+    }
+
+    return {addMark, getMark, resetBoard}; 
+})(); 
+
+const displayController = (function() {
+    const gameResult = document.querySelector('.gameResult'); 
+    const playerTurn = document.querySelector('.playerTurn');
+    const playAgainButton = document.querySelector('.playAgain'); 
+    const boardCells = document.querySelectorAll('.cell'); 
+
+    boardCells.forEach(cell => {
+        cell.addEventListener('click', (e) => {
+            if (gameController.getIsOver() || e.target.textContent != "") return; 
+            gameController.playRound(parseInt(e.target.dataset.index)); 
+            updateDOMBoard(); 
+        })
+    })
+
+    playAgainButton.addEventListener('click', () => {
+        gameBoard.resetBoard(); 
+        gameController.reset(); 
+        updateDOMBoard(); 
+        gameResult.textContent = "";
+        setPlayerTurn(`Player 1's Turn`)
+    })
+
+    const updateDOMBoard = () => {
+        for (let i = 0; i < boardCells.length; i++) {
+            boardCells[i].textContent = gameBoard.getMark(i); 
         }
-        return false; 
+    }
+
+    const setGameResult = (result) => {
+        if (result === "Tie") {
+            gameResult.innerText = "It's a Tie! Nobody wins."; 
+        }
+        else {
+            gameResult.innerText = `${result} wins!`; 
+        }
+    }
+
+    const setPlayerTurn = (message) => {
+        playerTurn.textContent = message;
+    }
+
+    return {setGameResult, setPlayerTurn};
+
+})();
+
+const gameController = (function() {
+
+    // Creating the players. 
+    let playerOne = createUser('Player 1', 'O'); 
+    let playerTwo = createUser('Player 2', 'X');
+
+    let round = 1; 
+    let isOver = false; 
+
+    const playRound = (cellIndex) => {
+        gameBoard.addMark(cellIndex, getCurrentPlayerSign());
+        if (playerWon(cellIndex)) {
+            displayController.setPlayerTurn("Game Finished!");
+            displayController.setGameResult(getCurrentPlayer());
+            isOver = true; 
+            return; 
+        }
+        if (round === 9) {
+            displayController.setPlayerTurn("Game Finished!");
+            displayController.setGameResult('Tie'); 
+            isOver = true; 
+            return; 
+        }
+        round += 1; 
+        displayController.setPlayerTurn(
+            `${getCurrentPlayer()}'s turn`
+        );
+    }
+
+    const getCurrentPlayerSign = () => {
+        return round % 2 === 1 ? playerOne.symbol : playerTwo.symbol; 
+    }
+
+    const getCurrentPlayer = function() {
+        return round % 2 === 1 ? playerOne.name : playerTwo.name;
     }
 
     // Checking if current player won by comparing every winning combination with the player's moves. 
-    const playerWon = function(player) {
+    const playerWon = function(fieldIndex) {
         const winConditions = [
             [0, 1, 2],
             [3, 4, 5],
@@ -75,74 +116,33 @@ const gameBoard = (function() {
             [0, 4, 8],
             [2, 4, 6],
         ];
-        let isWon = false; 
-        winConditions.forEach(winCondition => {
-            let matches = 0; 
-            winCondition.forEach(index => {
-                if (player.moves.has(index)) {
-                    matches += 1; 
-                }
-            })
-            if (matches === 3) {
-               isWon = true; 
-            }
-        })
-        return isWon; 
+        return winConditions
+            .filter((combination) => combination.includes(fieldIndex))
+            .some((possibleCombination) =>
+            possibleCombination.every(
+             (index) => gameBoard.getMark(index) === getCurrentPlayerSign()
+            )
+      );
     }
 
-    const isFilled = function() {
-        let isBoardFilled = true; 
-        board.forEach(cell => {
-            if (cell === "") {
-                isBoardFilled = false; 
-            }
-        })
-        return isBoardFilled; 
+    const getIsOver = () => {
+        return isOver; 
     }
 
-   
-    return {renderBoard, addPlayerMark, playerWon, isFilled}; 
-})(); 
-
-const game = (function() {
-
-    const start = function(p1, p2) {
-        gameStatus = true; 
-        gameTie = false; 
-        let playerOneName = p1; 
-        let playerTwoName = p2; 
-
-        // Creating the players. 
-        let playerOne = createUser(playerOneName, 'O'); 
-        let playerTwo = createUser(playerTwoName, 'X');
-
-        // Setting the initial current player. 
-        let curPlayer = playerOne; 
-
-        curPlayer = gameBoard.renderBoard(curPlayer, playerOne, playerTwo); 
+    const reset = () => {
+        round = 1; 
+        isOver = false; 
     }
 
-    return {start}; 
+    return {playRound, getIsOver, reset, getCurrentPlayer}; 
 })();
-
-// Factory Function - Changing player's turns
-function changePlayer(curPlayer, playerOne, playerTwo) {
-    return curPlayer === playerOne ? playerTwo : playerOne; 
-}
 
 // Factory Function - Creating Players 
 function createUser(name, symbol) {
-    let moves = new Set(); 
-    return {name, symbol, moves}; 
+    this.name = name; 
+    this.symbol = symbol; 
+
+    return {name, symbol}; 
 }
 
-const playButton = document.querySelector('.playButton'); 
 
-playButton.addEventListener('click', (e) => {
-    e.preventDefault();
-    playerOneName = document.querySelector('#player1Name').value; 
-    playerTwoName = document.querySelector('#player2Name').value;
-    document.querySelector('.gameBoard').classList.toggle('hidden'); 
-    document.querySelector('form').classList.add('hidden');
-    game.start(playerOneName, playerTwoName);
-})
